@@ -17,7 +17,9 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-
+import Amplify from 'aws-amplify';
+import config from './src/aws-exports';
+Amplify.configure(config);
 import {
   Colors,
   DebugInstructions,
