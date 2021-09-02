@@ -20,6 +20,7 @@ import {
 import Amplify from 'aws-amplify';
 import config from './src/aws-exports';
 Amplify.configure(config);
+import {withAuthenticator} from 'aws-amplify-react-native';
 import {
   Colors,
   DebugInstructions,
@@ -111,4 +112,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+// export default App;
+export default withAuthenticator(App);

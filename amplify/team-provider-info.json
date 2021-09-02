@@ -10,6 +10,11 @@
       "StackName": "amplify-plant-dev-201119",
       "StackId": "arn:aws:cloudformation:eu-west-2:070324800980:stack/amplify-plant-dev-201119/8fe7ccf0-0c21-11ec-af21-0a943a90ab54",
       "AmplifyAppId": "d2e83sbzn6rpe6"
+    },
+    "categories": {
+      "auth": {
+        "plant4af9efc7": {}
+      }
     }
   }
 }
