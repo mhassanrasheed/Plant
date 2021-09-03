@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "plant",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authplant4af9efc7",
+      "Outputs.UserPoolId"
+    ]
+  }
+}
