@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import type {Node} from 'react';
 import {
   SafeAreaView,
@@ -17,9 +17,10 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import Amplify from 'aws-amplify';
-import config from './src/aws-exports';
-Amplify.configure(config);
+
+import {Auth, API, graphqlOperation} from 'aws-amplify';
+import {getUser} from './src/graphql/queries';
+import {createUser} from './src/graphql/mutations';
 import {withAuthenticator} from 'aws-amplify-react-native';
 import {
   Colors,
@@ -61,6 +62,33 @@ const App: () => Node = () => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userInfo = await Auth.currentAuthenticatedUser({bypassCache: true});
+
+      if (userInfo) {
+        const userData = await API.graphql(
+          graphqlOperation(getUser, {id: userInfo.attributes.sub}),
+        );
+
+        if (userData.data.getUser) {
+          console.log('This user Already exists in database');
+          return;
+        }
+
+        const newUser = {
+          id: userInfo.attributes.sub,
+          name: userInfo.username,
+          imageUri:
+            'https://lh3.googleusercontent.com/a-/AOh14GjchKs5Ss6ncJEohW8JE4Yyz7sYhM8kaROcHwyRyA=s288-p-rw-no',
+        };
+
+        await API.graphql(graphqlOperation(createUser, {input: newUser}));
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <SafeAreaView style={backgroundStyle}>
