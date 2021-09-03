@@ -1,0 +1,31 @@
+type WaterLog @model @auth(rules: [{allow: private}]) @key(name: "byUserPlants", fields: ["userplantsID"]) {
+  id: ID!
+  userplantsID: ID
+}
+
+type UserPlants @model @auth(rules: [{allow: private}]) @key(name: "byUser", fields: ["userID"]) @key(name: "byPlant", fields: ["plantID"]) {
+  id: ID!
+  userID: ID
+  water_status: String!
+  plantID: ID
+  WaterLogs: [WaterLog] @connection(keyName: "byUserPlants", fields: ["id"])
+}
+
+type Plant @model @auth(rules: [{allow: private}]) {
+  id: ID!
+  name: String!
+  temperature: String!
+  day_light: String!
+  water_duration: String!
+  water_times: String!
+  image: String
+  UserPlants: [UserPlants] @connection(keyName: "byPlant", fields: ["id"])
+}
+
+type User @model @auth(rules: [{allow: private}]) {
+  id: ID!
+  name: String!
+  imageUri: String
+  UserPlants: [UserPlants] @connection(keyName: "byUser", fields: ["id"])
+}
+ 
