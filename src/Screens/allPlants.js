@@ -21,12 +21,17 @@ import ListPlant from '../components/listPlant';
  * @return {*} View showing all the plants available for selection
  */
 export default function allPlants({navigation, route}) {
-  const [userPlants, setUserPlants] = useState([]);
+  const [notUserPlants, setNotUserPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const {user} = useContext(UserContext);
   const [userId, setUserId] = useState(user?.sub);
   const [number, setNumber] = useState(0);
 
+  /**
+   * Listens for a real time changes in User Plants table
+   * If a User deletes a plant then it refreshes the page
+   * @return {*} Updated plant list
+   */
   useMemo(() => {
     const subscription = API.graphql(
       graphqlOperation(onDeleteUserPlants),
@@ -40,27 +45,27 @@ export default function allPlants({navigation, route}) {
   }, []);
 
   useMemo(() => {
-    const fetchNotUserPlant = async () => {
-      const userInfo = await Auth.currentAuthenticatedUser({
-        bypassCache: true,
-      });
-      setUserId(userInfo.attributes.sub);
-      let fetchedUserPlants = await API.graphql(
-        graphqlOperation(listUserPlants, {
-          filter: {userID: {eq: userInfo.attributes.sub}},
-        }),
-      );
-      let allPlant = await API.graphql(graphqlOperation(listPlants));
-      let userPlantIds = new Set(
-        fetchedUserPlants.data.listUserPlants.items.map(Plant => Plant.plantID),
-      );
-      let notUserPlants = allPlant.data.listPlants.items.filter(
-        ({id}) => !userPlantIds.has(id),
-      );
-      setUserPlants(notUserPlants);
-      setLoading(false);
-    };
-    fetchNotUserPlant();
+    try {
+      const fetchNotUserPlant = async () => {
+        let fetchedUserPlants = await API.graphql(
+          graphqlOperation(listUserPlants, {
+            filter: {userID: {eq: userId}},
+          }),
+        );
+        let allPlant = await API.graphql(graphqlOperation(listPlants));
+        let userPlantIds = new Set(
+          fetchedUserPlants.data.listUserPlants.items.map(
+            Plant => Plant.plantID,
+          ),
+        );
+        let notUserPlants = allPlant.data.listPlants.items.filter(
+          ({id}) => !userPlantIds.has(id),
+        );
+        setNotUserPlants(notUserPlants);
+        if (loading) setLoading(false);
+      };
+      fetchNotUserPlant();
+    } catch (error) {}
   }, [number]);
 
   const addPlant = async plantId => {
@@ -100,11 +105,11 @@ export default function allPlants({navigation, route}) {
         <ActivityIndicator size="large" color="green" />
       </View>
     );
-  else if (userPlants.length != 0) {
+  else if (notUserPlants.length != 0) {
     return (
       <View style={styles.container}>
         <FlatList
-          data={userPlants}
+          data={notUserPlants}
           renderItem={renderItem}
           keyExtractor={item => item.id}
         />

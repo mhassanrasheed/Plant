@@ -24,35 +24,39 @@ const App = () => {
   const Tab = createBottomTabNavigator();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const userInfo = await Auth.currentAuthenticatedUser({bypassCache: true});
-      setUser(userInfo.attributes);
-      if (userInfo) {
-        const userData = await API.graphql(
-          graphqlOperation(getUser, {id: userInfo.attributes.sub}),
-        );
+    try {
+      const fetchUser = async () => {
+        const userInfo = await Auth.currentAuthenticatedUser({
+          bypassCache: true,
+        });
+        setUser(userInfo.attributes);
+        if (userInfo) {
+          const userData = await API.graphql(
+            graphqlOperation(getUser, {id: userInfo.attributes.sub}),
+          );
 
-        if (userData.data.getUser) {
-          console.log('This user Already exists in database');
-          if (initializing) setInitializing(false);
-          return;
+          if (userData.data.getUser) {
+            console.log('This user Already exists in database');
+            if (initializing) setInitializing(false);
+            return;
+          }
+
+          const newUser = await API.graphql(
+            graphqlOperation(createUser, {
+              input: {
+                id: userInfo.attributes.sub,
+                name: userInfo.username,
+                imageUri:
+                  'https://lh3.googleusercontent.com/a-/AOh14GjchKs5Ss6ncJEohW8JE4Yyz7sYhM8kaROcHwyRyA=s288-p-rw-no',
+              },
+            }),
+          );
+
+          if (newUser) if (initializing) setInitializing(false);
         }
-
-        const newUser = await API.graphql(
-          graphqlOperation(createUser, {
-            input: {
-              id: userInfo.attributes.sub,
-              name: userInfo.username,
-              imageUri:
-                'https://lh3.googleusercontent.com/a-/AOh14GjchKs5Ss6ncJEohW8JE4Yyz7sYhM8kaROcHwyRyA=s288-p-rw-no',
-            },
-          }),
-        );
-
-        if (newUser) if (initializing) setInitializing(false);
-      }
-    };
-    fetchUser();
+      };
+      fetchUser();
+    } catch (error) {}
   }, []);
 
   if (initializing)

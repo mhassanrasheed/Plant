@@ -14,7 +14,7 @@ import {UserContext} from '../../App';
 import PlantItem from '../components/plantItem';
 
 /**
- *
+ *  Display the collection of user plants
  *
  * @export
  * @param {*} {navigation, route}
@@ -48,19 +48,20 @@ export default function myPlants({navigation, route}) {
   }, []);
 
   useMemo(() => {
-    const fetchUserPlants = async () => {
-      const userInfo = await Auth.currentAuthenticatedUser({
-        bypassCache: true,
-      });
-      const fetchedUserPlants = await API.graphql(
-        graphqlOperation(listUserPlants, {
-          filter: {userID: {eq: userInfo.attributes.sub}},
-        }),
-      );
-      setUserPlants(fetchedUserPlants.data.listUserPlants.items);
-      setMyPlantsLoading(false);
-    };
-    fetchUserPlants();
+    try {
+      const fetchUserPlants = async () => {
+        const fetchedUserPlants = await API.graphql(
+          graphqlOperation(listUserPlants, {
+            filter: {userID: {eq: userId}},
+          }),
+        );
+        setUserPlants(fetchedUserPlants.data.listUserPlants.items);
+        setMyPlantsLoading(false);
+      };
+      fetchUserPlants();
+    } catch (error) {
+      console.log(error);
+    }
   }, [number]);
 
   const removePlant = async plantId => {
