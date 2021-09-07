@@ -22,7 +22,10 @@ yarn android
 - AWS APPsync
 - DynamoDB
 - S3 Bucket
-![AUTHENTICATION](https://user-images.githubusercontent.com/40543508/132407125-4c3c6015-a577-49f4-adf0-ddb9727f59fd.png)
 
+## Authentication Flow
+The following diagram illustrates the authentication flow
+![AUTHENTICATION](https://user-images.githubusercontent.com/40543508/132407125-4c3c6015-a577-49f4-adf0-ddb9727f59fd.png)
+## Adding and removing Plants
 ![Adding and removing plants](https://user-images.githubusercontent.com/40543508/132406063-cb5e0475-03cb-40e7-99e7-ab4e25f69341.png)
 
