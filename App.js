@@ -1,72 +1,32 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
-import React, {useEffect} from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
+import 'react-native-gesture-handler';
+import React, {useEffect, useState, createContext} from 'react';
+import {View, Pressable, ActivityIndicator} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Auth, API, graphqlOperation} from 'aws-amplify';
 import {getUser} from './src/graphql/queries';
 import {createUser} from './src/graphql/mutations';
 import {withAuthenticator} from 'aws-amplify-react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {NavigationContainer} from '@react-navigation/native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import AllPlant from './src/Screens/allPlants';
+import MyPlant from './src/Screens/myPlants';
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+export const UserContext = createContext();
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+/**
+ * Process User detials when they login/signup
+ * if it is a new user then a record is created in a User DynamoDB table
+ * @return {View} which displays User's collection of plants
+ */
+const App = () => {
+  const [user, setUser] = useState();
+  const [initializing, setInitializing] = useState(true);
+  const Tab = createBottomTabNavigator();
 
   useEffect(() => {
     const fetchUser = async () => {
       const userInfo = await Auth.currentAuthenticatedUser({bypassCache: true});
-
+      setUser(userInfo.attributes);
       if (userInfo) {
         const userData = await API.graphql(
           graphqlOperation(getUser, {id: userInfo.attributes.sub}),
@@ -74,71 +34,63 @@ const App: () => Node = () => {
 
         if (userData.data.getUser) {
           console.log('This user Already exists in database');
+          if (initializing) setInitializing(false);
           return;
         }
 
-        const newUser = {
-          id: userInfo.attributes.sub,
-          name: userInfo.username,
-          imageUri:
-            'https://lh3.googleusercontent.com/a-/AOh14GjchKs5Ss6ncJEohW8JE4Yyz7sYhM8kaROcHwyRyA=s288-p-rw-no',
-        };
+        const newUser = await API.graphql(
+          graphqlOperation(createUser, {
+            input: {
+              id: userInfo.attributes.sub,
+              name: userInfo.username,
+              imageUri:
+                'https://lh3.googleusercontent.com/a-/AOh14GjchKs5Ss6ncJEohW8JE4Yyz7sYhM8kaROcHwyRyA=s288-p-rw-no',
+            },
+          }),
+        );
 
-        await API.graphql(graphqlOperation(createUser, {input: newUser}));
+        if (newUser) if (initializing) setInitializing(false);
       }
     };
     fetchUser();
   }, []);
 
+  if (initializing)
+    return (
+      <View
+        style={{backgroundColor: 'white', flex: 1, justifyContent: 'center'}}>
+        <ActivityIndicator size="large" color="green" />
+      </View>
+    );
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <UserContext.Provider value={{user: user}}>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({route}) => ({
+            tabBarIcon: ({focused}) => {
+              let iconName;
+              if (route.name === 'HOME') {
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'ADD PLANT') {
+                iconName = focused ? 'add-circle' : 'add-circle-outline';
+              }
+              return <Ionicons name={iconName} size={30} color={'green'} />;
+            },
+            headerRight: () => (
+              <View style={{marginEnd: 5}}>
+                <Pressable onPress={() => Auth.signOut()}>
+                  <Ionicons name={'log-out'} size={30} color="green" />
+                </Pressable>
+              </View>
+            ),
+          })}>
+          <Tab.Screen name="HOME" component={MyPlant} />
+          <Tab.Screen name="ADD PLANT" component={AllPlant} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </UserContext.Provider>
   );
 };
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-// export default App;
 export default withAuthenticator(App);

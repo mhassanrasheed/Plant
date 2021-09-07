@@ -264,6 +264,15 @@ export const schema = {
                     "properties": {}
                 },
                 {
+                    "type": "key",
+                    "properties": {
+                        "name": "byPlantt",
+                        "fields": [
+                            "id"
+                        ]
+                    }
+                },
+                {
                     "type": "auth",
                     "properties": {
                         "rules": [
@@ -364,5 +373,5 @@ export const schema = {
     },
     "enums": {},
     "nonModels": {},
-    "version": "f10e0957234b8c56f8804cb37e185c4c"
+    "version": "edd51677f08dc29bad950eff19a511a1"
 };
