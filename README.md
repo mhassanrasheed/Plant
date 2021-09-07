@@ -1,5 +1,5 @@
 # Plant
-A service which to make 
+A service that allows people to better take care of their home garden.
 ## Installing Project
 Before Installing this app make sure you have react native setup. Follow the React Native Environment Setup guide to install the Required Dependencies.
 https://reactnative.dev/docs/environment-setup
